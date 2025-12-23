@@ -2,6 +2,8 @@
 # 
 # Nutritional intelligence in FinnFoodPics
 # created by Arsene Kanyamibwa (arsene.kanyamibwa@helsinki.fi) and reviewed by Manon Chédeville (manon.chedeville@helsinki.fi)
+# Purpose: Check assumptions, run frequentist and Bayesian tests, and visualise correlations.
+# Script: Energy density vs estimated energy density (HPF vs non‑HPF)t-test and correlations
 #
 # created: 18.06.2025
 # last updated: 07.10.2025 
@@ -10,76 +12,68 @@
 #Clear environment
 rm(list=ls())
 
-#load packages and open libraries
-#install packages (if needed)
+###Package and setup section
 
-install.packages("tidyverse")
-install.packages("ggpubr")
-install.packages("BayesFactor")
-install.packages("dplyr")
-install.packages("knitr")
-install.packages("effsize")
-install.packages("DFBA")
-install.packages("coda")
-install.packages("Matrix")
-install.packages("gridExtra")
-install.packages("car")
+# Install packages once (comment out in normal use)
+# install.packages(c(
+#   "tidyverse", "ggpubr", "BayesFactor", "dplyr", "knitr",
+#   "effsize", "DFBA", "coda", "Matrix", "gridExtra", "car"
+# ))
 
-#Load the necessary libraries 
+# Load libraries used in this script
 {
-  library(tidyverse)
-  library(coda)
-  library(Matrix)
-  library(ggpubr)
-  library(BayesFactor)
-  library(knitr)
-  library(DFBA)
-  library(dplyr)
-  library(gridExtra)
-  library(car)
-  library(effsize)
-}  
-
-#load excel file 
-#set path
+library(tidyverse)   # data wrangling, piping, plotting
+library(coda)        # MCMC diagnostics (used by BayesFactor / DFBA)
+library(Matrix)      # matrix operations (dependency)
+library(ggpubr)      # ggscatter and publication‑ready plots
+library(BayesFactor) # Bayesian t‑tests and correlations
+library(knitr)       # reporting
+library(DFBA)        # additional Bayesian analyses
+library(dplyr)       # data manipulation (mostly via tidyverse)
+library(gridExtra)   # arrange multiple plots
+library(car)         # leveneTest for homogeneity of variance
+library(effsize)     # effect size calculations
+}
+# Set working directory (use the one appropriate for your system)
+# Windows path (lab server)
 setwd("P:/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/04_Analysis")
-#set path for Mac
-setwd('/Volumes/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/04_Analysis')
+# Mac path (mounted volume)
+# setwd("/Volumes/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/04_Analysis")
 
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#Data import and cleaning
+
+# Import picture‑set data
 food_data <- read.csv("0_Complete_pictureset_data.csv")
 
-#remove column X
+# Drop first column (index column created when exporting from R/Excel)
 food_data <- food_data[, -1]
 
-#change class for the categories 
+# Convert categorical variables to factors for modelling
 {
-  food_data$Category <- as.factor(food_data$Category)
-  food_data$Palatability <- as.factor(food_data$Palatability)
-  food_data$NOVA_Group <- as.factor(food_data$NOVA_Group)
-  food_data$Energy_levels <- as.factor(food_data$Energy_levels)
-  food_data$Energy_levels2 <- as.factor(food_data$Energy_levels2)
-  food_data$NOVA_Group2 <- as.factor(food_data$NOVA_Group2)
+food_data$Category       <- factor(food_data$Category)
+food_data$Palatability   <- factor(food_data$Palatability)
+food_data$NOVA_Group     <- factor(food_data$NOVA_Group)
+food_data$Energy_levels  <- factor(food_data$Energy_levels)
+food_data$Energy_levels2 <- factor(food_data$Energy_levels2)
+food_data$NOVA_Group2    <- factor(food_data$NOVA_Group2)
 }
-
+# Set explicit factor order for energy levels (used in plotting / modelling)
 {
-  #display factor levels for category
-  levels(food_data$Energy_levels)
-  #reorder factor category 
-  food_data$Energy_levels <- factor(food_data$Energy_levels, levels = c("HED","MED","LED"))
-  #display factor levels for category
-  levels(food_data$Energy_levels2)
-  #reorder factor category 
-  food_data$Energy_levels2 <- factor(food_data$Energy_levels2, levels = c("VHED","HED","MED","LED","VLED"))
+food_data$Energy_levels  <- factor(food_data$Energy_levels,
+                                   levels = c("HED", "MED", "LED"))
+food_data$Energy_levels2 <- factor(food_data$Energy_levels2,
+                                   levels = c("VHED", "HED", "MED", "LED", "VLED"))
 }
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-###Assumptions check for the whole sample
-##Actual Energy density
+###Assumptions check for full sample
+##Actual Energy density (AED)
 
-#Normality test 
+# Check normality of AED
 shapiro.test(food_data$Energy_density)
 #W = 0.98925, p-value = 0.802 data is normally distributed
 
-# Perform Levene's test
+# Check homogeneity of variance for AED by palatability
 leveneTest(Energy_density ~ Palatability, data = food_data)
 #Levene's Test for Homogeneity of Variance (center = median)
 #                Df F value  Pr(>F)  
@@ -88,7 +82,7 @@ leveneTest(Energy_density ~ Palatability, data = food_data)
 #---
 #Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-# Student's t-test (assuming equal variances)
+# Run t‑test on AED (assume equal variances if Levene p > .05)
 t.test(Energy_density ~ Palatability, data = food_data, var.equal = TRUE)
 #t = -0.033026, df = 70, p-value = 0.9737
 #alternative hypothesis: true difference in means between group HPF and group Not HPF is not equal to 0
@@ -98,20 +92,20 @@ t.test(Energy_density ~ Palatability, data = food_data, var.equal = TRUE)
 #  mean in group HPF mean in group Not HPF 
 #3.561429              3.571568 
 
-##Estimated energy density 
+##Estimated enrgy density (EED)
 
-#Normality test
+# Check normality of EED
 shapiro.test(food_data$Estimated_ED)
 #W = 0.90921, p-value = 7.301e-05 data is NOT normally distributed
 
-# Perform Levene's test
+# Check homogeneity of variance for EED
 leveneTest(Estimated_ED ~ Palatability, data = food_data)
 #Levene's Test for Homogeneity of Variance (center = median)
 #      Df F value Pr(>F)
 #group  1  0.6512 0.4224 Equal variance
 #      70 
 
-# Welch's test
+# Use Welch t‑test for EED (non‑normal distribution)
 t.test(Estimated_ED ~ Palatability, data = food_data)
 #t = 1.6467, df = 64.866, p-value = 0.1045
 #alternative hypothesis: true difference in means between group HPF and group Not HPF is not equal to 0
@@ -120,33 +114,32 @@ t.test(Estimated_ED ~ Palatability, data = food_data)
 #sample estimates:
 #    mean in group HPF mean in group Not HPF 
 #             63.95121              60.31254
-
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-# Filter the data for Category "HPF"
-filtered_data_HPF <- food_data %>% filter(Palatability == "HPF")
-# Filter the data for Category "NHPF"
+###Subsetting and correlation choices
+
+# Split data by palatability category
+filtered_data_HPF  <- food_data %>% filter(Palatability == "HPF")
 filtered_data_NHPF <- food_data %>% filter(Palatability == "Not HPF")
 
-###Assumptions check for the HPF
-#Normality test
+# Normality checks for AED and EED in each subgroup
 shapiro.test(filtered_data_HPF$Energy_density)
 #W = 0.93903, p-value = 0.1044 data is normally distributed
+
 shapiro.test(filtered_data_NHPF$Energy_density)
 #W = 0.94627, p-value = 0.04002 data is NOT normally distributed
-
 shapiro.test(filtered_data_HPF$Estimated_ED)
 #W =  0.8931, p-value = 0.007917 data is NOT normally distributed
 
-#Assumptions check for the  not HPF
-#Normality test
 shapiro.test(filtered_data_NHPF$Estimated_ED)
 #W = 0.91112, p-value = 0.002434 is NOT normally distributed
 
+# Normality is violated in most combinations, so use Spearman correlations
+# (monotonic relationship, robust to non‑normality).
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-#ED vs EED
-#normality failed for 3 out of 4 tests hence I will use Spearman 
+##Plots
+#Scatter plots AED versus EED
 
-#HPF
+#HPF correlation for AED vs EED
 p1 <- ggscatter(filtered_data_HPF, x = "Energy_density", y = "Estimated_ED", 
                 add = "reg.line",
                 ggtheme = theme_minimal(),
@@ -156,8 +149,8 @@ p1 <- ggscatter(filtered_data_HPF, x = "Energy_density", y = "Estimated_ED",
                 ggp = NULL,
                 show.legend.text = NA,
                 cor.coef.size = 5,
-                cor.coef.coord = c(2, 35),
-                color = "#ffc107ff",   # more vivid HPF color
+                cor.coef.coord = c(2, 35), # place correlation label in empty region
+                color = "#ffc107ff",   #  HPF color
                 palette = NULL,
                 shape = 19,
                 size = 4.2,           # slightly larger to emphasize HPF
@@ -176,7 +169,7 @@ p1 <- ggscatter(filtered_data_HPF, x = "Energy_density", y = "Estimated_ED",
 
 p1
 #...............................................................................
-#ED vs EED
+#AED vs EED
 #NHPF
 p2 <- ggscatter(filtered_data_NHPF, x = "Energy_density", y = "Estimated_ED", 
                 add = "reg.line",
@@ -188,7 +181,7 @@ p2 <- ggscatter(filtered_data_NHPF, x = "Energy_density", y = "Estimated_ED",
                 show.legend.text = NA,
                 cor.coef.size = 5,
                 cor.coef.coord = c(2, 35),
-                color = "#4a8ce1ff",   
+                color = "#4a8ce1ff",   # blue for non‑HPF
                 palette = NULL,
                 shape = 19,
                 size = 4,
@@ -211,54 +204,65 @@ grid.arrange(p1, p2, nrow = 2)
 # Arrange HPF vs non‑HPF clearly (e.g. side‑by‑side)
 grid.arrange(p1, p2, nrow = 1)
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-#Frequentist statistic for whole sample
-cor.test(food_data$Estimated_ED, food_data$Energy_density, method=c("spearman"))
+#Corrlelation statistics for full sample
+# Spearman correlations
+
+
+# Full sample: EED vs ED
+cor.test(food_data$Estimated_ED, food_data$Energy_density,
+         method = "spearman")
 #S = 38622, p-value = 0.001026
 #alternative hypothesis: true rho is not equal to 0
 #sample estimates:
 #  rho 
 #0.3790259 
 
-#Frequentist statistic for HPF
-cor.test(filtered_data_HPF$Estimated_ED, filtered_data_HPF$Energy_density, method=c("spearman"))
+# HPF only: EED vs ED
+cor.test(filtered_data_HPF$Estimated_ED, filtered_data_HPF$Energy_density,
+         method = "spearman")
 #S = 1255.7, p-value = 0.0001489
 #alternative hypothesis: true rho is not equal to 0
 #sample estimates:
 #  rho 
 #0.6563569 
 
-#Frequentist statistic for Non HPF
-cor.test(filtered_data_NHPF$Estimated_ED, filtered_data_NHPF$Energy_density, method=c("spearman"))
+# Non‑HPF only: EED vs ED
+cor.test(filtered_data_NHPF$Estimated_ED, filtered_data_NHPF$Energy_density,
+         method = "spearman")
 #S = 12862, p-value = 0.5456
 #alternative hypothesis: true rho is not equal to 0
 #sample estimates:
 #  rho 
 #0.09360023 
 
-#Bayesian t-tests to complement the frequentist analysis
-ttestBF(formula = Energy_density ~ Palatability, data = food_data)
+# Bayesian t‑tests (group differences)
+
+# Bayesian t‑test: ED by palatability
+ttestBF(Energy_density ~ Palatability, data = food_data)
 #[1] Alt., r=0.707 : 0.2484097 ±0.01%
 
-ttestBF(formula = Estimated_ED ~ Palatability, data = food_data)
+# Bayesian t‑test: EED by palatability
+ttestBF(Estimated_ED ~ Palatability, data = food_data)
 #[1] Alt., r=0.707 : 0.7169468 ±0.01%
 #...............................................................................
-#Correlations in Bayesian statistics
 
-#Bayesian statistic for the whole sample (NOT Reported in the paper)
-correlationBF(y= food_data$Energy_density,
-              x= food_data$Estimated_ED)
+#---------------------------#
+# Bayesian correlations (exploratory)
+#---------------------------#
+
+# Full sample (not reported in manuscript; exploratory)
+correlationBF(y = food_data$Energy_density,
+              x = food_data$Estimated_ED)
 #[1] Alt., r=0.333 : 32.28543 ±0%
 
-#Bayesian statistic for HPF ED vs HPF EED
-correlationBF(y= filtered_data_HPF$Energy_density,
-              x= filtered_data_HPF$Estimated_ED)
-#Bayes factor analysis
-#--------------
+# HPF: ED vs EED
+correlationBF(y = filtered_data_HPF$Energy_density,
+              x = filtered_data_HPF$Estimated_ED)
 #  [1]Alt., r=0.333 : 371.2954 ±0% 
 
-#Bayesian statistic for NHPF ED vs NHPF EED
-correlationBF(y= filtered_data_NHPF$Energy_density,
-              x= filtered_data_NHPF$Estimated_ED)
+# Non‑HPF: ED vs EED
+correlationBF(y = filtered_data_NHPF$Energy_density,
+              x = filtered_data_NHPF$Estimated_ED)
 #[1] Alt., r=0.333 : 0.7666349 ±0%
 #...............................................................................
 #::::::::::::::::::::THE END::::::::::::::::::::::::::::::::::::::::::::::::::::
