@@ -2,7 +2,8 @@
 # 
 # Nutritional intellgence in FinnFoodPics
 # created by Arsene Kanyamibwa (arsene.kanyamibwa@helsinki.fi) and reviewed by Manon Chédeville (manon.chedeville@helsinki.fi)
-# Linear mixed models
+# Puprpose: Test effects of palatability and category on ratings, accounting for repeated measures per participant.
+# Script: Mixed-effects models for food ratings (EED, satiety, liking, etc.)
 #
 # created: 18.06.2025
 # last updated: 08.10.2025
@@ -11,76 +12,76 @@
 #Clear environment
 rm(list=ls())
 
-#load packages and open libraries
-#install packages (if needed)
-install.packages("tidyverse")
-install.packages("ggpubr")
-install.packages("dplyr")
-install.packages("knitr")
-install.packages("effsize")
-install.packages("Matrix")
-install.packages("lme4")
-install.packages("broom.mixed")
-install.packages("emmeans")
-install.packages("performance")
-install.packages("lmerTest")
-install.packages("sjstats")
-install.packages("see")
-install.packages("parameters")
+# Install packages once (comment out in regular use)
+# install.packages(c(
+#   "tidyverse", "ggpubr", "dplyr", "knitr", "effsize",
+#   "Matrix", "lme4", "broom.mixed", "emmeans", "performance",
+#   "lmerTest", "sjstats", "see", "parameters"
+# ))
 
-#Load the necessary libraries 
+# Load libraries used in this script
 {
-  library(tidyverse)
-  library(ggpubr)
-  library(knitr)
-  library(dplyr)
-  library(Matrix)
-  library(lmerTest)
-  library(emmeans)
-  library(performance)
-  library(broom.mixed)
-  library(sjstats)
-  library(lme4)
-  library(parameters)
-}  
-
-
-#load excel file 
-#set path for Windows
-setwd("P:/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/03_Data/05_Food Ratings Data")
-food_data_long <- read.csv("0_Complete_pictureset_data_long.csv")
-#set path for Mac
-setwd('/Volumes/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/04_Analysis')
-food_data_long<-read.csv('/Volumes/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/03_Data/05_Food Ratings Data/0_Complete_pictureset_data_long.csv')
-
-#remove column X
-food_data_long <- food_data_long[, -1]
-#change class for the categories 
-{
-  food_data_long$Category <- as.factor(food_data_long$Category)
-  food_data_long$Palatability <- as.factor(food_data_long$Palatability)
-  food_data_long$NOVA_Group <- as.factor(food_data_long$NOVA_Group)
-  food_data_long$Energy_levels <- as.factor(food_data_long$Energy_levels)
-  food_data_long$Energy_levels2 <- as.factor(food_data_long$Energy_levels2)
-  food_data_long$NOVA_Group2 <- as.factor(food_data_long$NOVA_Group2)
-}
-#Correct factorial ED
-{
-  #display factor levels for category
-  levels(food_data_long$Energy_levels)
-  #reorder factor category 
-  food_data_long$Energy_levels <- factor(food_data_long$Energy_levels, levels = c("HED","MED","LED"))
-  #display factor levels for category
-  levels(food_data_long$Energy_levels2)
-  #reorder factor category 
-  food_data_long$Energy_levels2 <- factor(food_data_long$Energy_levels2, levels = c("VHED","HED","MED","LED","VLED"))
+library(tidyverse)    # data handling and plotting
+library(ggpubr)       # publication-ready plots (if needed later)
+library(knitr)        # reporting
+library(dplyr)        # data manipulation
+library(Matrix)       # required by lme4
+library(lme4)         # mixed-effects models
+library(lmerTest)     # p-values/df for lmer models
+library(emmeans)      # estimated marginal means (if needed)
+library(performance)  # model diagnostics (check_model)
+library(broom.mixed)  # tidy model outputs
+library(sjstats)      # additional model summaries/effect sizes
+library(parameters)   # model_parameters for CIs and fixed/random effects
 }
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-# define a lmer for EED 
-EED_null = lmer(Estimated_ED ~ Palatability 
-                + Category 
-                + (1|Participant),
-                data = food_data_long)
+# Set working directory (use the one appropriate for your system)
+# Windows path (lab server)
+setwd("P:/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/03_Data/05_Food Ratings Data")
+food_data_long <- read.csv("0_Complete_pictureset_data_long.csv")
+
+# Mac path (mounted volume) – uncomment when running on Mac
+# setwd("/Volumes/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/03_Data/05_Food Ratings Data")
+# food_data_long <- read.csv("0_Complete_pictureset_data_long.csv")
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#Data import and cleaning
+
+# Import picture‑set data
+food_data <- read.csv("0_Complete_pictureset_data.csv")
+
+# Drop first column (index column created when exporting from R/Excel)
+food_data_long <- food_data_long[, -1]
+
+# Convert categorical variables to factors for modelling
+{
+  food_data_long$Category       <- factor(food_data_long$Category)
+  food_data_long$Palatability   <- factor(food_data_long$Palatability)
+  food_data_long$NOVA_Group     <- factor(food_data_long$NOVA_Group)
+  food_data_long$Energy_levels  <- factor(food_data_long$Energy_levels)
+  food_data_long$Energy_levels2 <- factor(food_data_long$Energy_levels2)
+  food_data_long$NOVA_Group2    <- factor(food_data_long$NOVA_Group2)
+}
+# Set explicit factor order for energy levels (used in plotting / modelling)
+{
+food_data_long$Energy_levels <- factor(
+  food_data_long$Energy_levels,
+  levels = c("HED", "MED", "LED")
+)
+food_data_long$Energy_levels2 <- factor(
+  food_data_long$Energy_levels2,
+  levels = c("VHED", "HED", "MED", "LED", "VLED")
+)
+}
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+# Random-intercept model: EED predicted by palatability and category,
+# with participant-specific intercepts to account for repeated ratings.
+
+#Model 1: Estimated energy density (EED)
+EED_null <- lmer(
+  Estimated_ED ~ Palatability + Category + (1 | Participant),
+  data = food_data_long
+)
+
 summary(EED_null)
 #
 #REML criterion at convergence: 38341.9
@@ -109,20 +110,33 @@ summary(EED_null)
 #PltbltyNHPF -0.398              
 #CategoryCmb -0.406  0.493       
 #CategoryFat -0.342  0.330  0.595
-#:..............................................................................
-#visual assessment for model assumptions 
-visuals_assumptions <- data.frame(predicted=predict(EED_null), residual = residuals(EED_null), referrer = food_data_long$Palatability) 
-ggplot(visuals_assumptions,aes(x=predicted,y=residual, colour= referrer)) + geom_point() + geom_hline(yintercept=0, lty=3) # Residuals
-ggplot(visuals_assumptions,aes(x=residual)) + geom_histogram(bins=20, color="black") # QQ-plot for normality
-ggplot(visuals_assumptions,aes(sample=residual)) + stat_qq() + stat_qq_line() # Residuals vs Fitted for homoscedasticity
 
-#check random effects
-ranef(EED_null)
+# Visual checks of model assumptions (residuals and normality)
+visuals_assumptions <- data.frame(
+  predicted=predict(EED_null),
+  residual = residuals(EED_null),
+  referrer = food_data_long$Palatability
+  ) 
 
-#check performance of the model (Linearity,Poserio predictive check, Variance Colinearity, Normality of residuals and random effect)
-check_model(EED_null)
-#...............................................................................
-#Get model-predicted estimated marginal means (EMMs)
+# Residuals vs fitted: check homoscedasticity and non-linearity
+ggplot(visuals_assumptions,aes(x=predicted,y=residual, colour= referrer))+
+  geom_point() + 
+  geom_hline(yintercept=0, lty=3)
+
+# Histogram of residuals: approximate normality check
+ggplot(visuals_assumptions,aes(x=residual)) + 
+  geom_histogram(bins=20, color="black") 
+
+#QQ-plot of residuals: more formal visual normality check
+ggplot(visuals_assumptions,aes(sample=residual)) + 
+  stat_qq() + 
+  stat_qq_line()
+
+# Check random effects structure and overall model performance
+check_model(EED_null)   # global diagnostics (performance package) -> (Linearity, Posterior predictive check, Variance Collinearity, Normality of residuals and random effect)
+
+.............................................
+## Extract fixed and random effects with confidence intervals
 model_ci_eed <- model_parameters(EED_null, ci = 0.95)
 print(model_ci_eed)
 # Fixed Effects 
@@ -140,14 +154,14 @@ print(model_ci_eed)
 #-----------------------------------------
 #SD (Intercept: Participant) |        9.95
 #SD (Residual)               |       17.36
-
-
-
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-ES_null = lmer(Expected_Satiety ~ Palatability 
-               + Category 
-               + (1|Participant),
-               data = food_data_long)
+#Model 2: Expected satiety
+
+ES_null <- lmer(
+  Expected_Satiety ~ Palatability + Category + (1 | Participant),
+  data = food_data_long
+)
+
 summary(ES_null)
 #REML criterion at convergence: 39106.2
 #Scaled residuals: 
@@ -175,16 +189,28 @@ summary(ES_null)
 #CategoryCmb -0.357  0.493       
 #CategoryFat -0.301  0.330  0.595
 
-#visual asssessment for model assumptions 
-visuals_assumptions <- data.frame(predicted=predict(ES_null), residual = residuals(ES_null), referrer = food_data_long$Palatability) 
-ggplot(visuals_assumptions,aes(x=predicted,y=residual, colour= referrer)) + geom_point() + geom_hline(yintercept=0, lty=3) # Residuals
-ggplot(visuals_assumptions,aes(x=residual)) + geom_histogram(bins=20, color="black") # QQ-plot for normality
-ggplot(visuals_assumptions,aes(sample=residual)) + stat_qq() + stat_qq_line() # Residuals vs Fitted for homoscedasticity
-#check perfomrance of the model 
+# Visual checks for model 2 (same structure as above)
+visuals_assumptions <- data.frame(
+  predicted = predict(ES_null),
+  residual  = residuals(ES_null),
+  referrer  = food_data_long$Palatability
+)
+
+ggplot(visuals_assumptions, aes(x = predicted, y = residual, colour = referrer)) +
+  geom_point() +
+  geom_hline(yintercept = 0, lty = 3)
+
+ggplot(visuals_assumptions, aes(x = residual)) +
+  geom_histogram(bins = 20, color = "black")
+
+ggplot(visuals_assumptions, aes(sample = residual)) +
+  stat_qq() +
+  stat_qq_line()
+
+# Global model diagnostics
 check_model(ES_null)
 
-#Get model-predicted estimated marginal means (EMMs)
-
+# Fixed and random effects with 95% CIs
 model_ci_es <- model_parameters(ES_null, ci = 0.95)
 print(model_ci_es)
 # Fixed Effects 
@@ -204,10 +230,13 @@ print(model_ci_es)
 #  SD (Residual)               |       18.87
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-Liking_null = lmer(Liking ~ Palatability 
-                   + Category 
-                   + (1|Participant),
-                   data = food_data_long)
+# Model 3: Liking
+
+Liking_null <- lmer(
+  Liking ~ Palatability + Category + (1 | Participant),
+  data = food_data_long
+)
+
 summary(Liking_null)
 #REML criterion at convergence: 36364.1
 
@@ -236,18 +265,28 @@ summary(Liking_null)
 #CategoryCmb -0.583  0.493       
 #CategoryFat -0.491  0.330  0.595
 
-#visual asssessment for model assumptions 
-visuals_assumptions <- data.frame(predicted=predict(Liking_null), residual = residuals(Liking_null), referrer = food_data_long$Palatability) 
-ggplot(visuals_assumptions,aes(x=predicted,y=residual, colour= referrer)) + geom_point() + geom_hline(yintercept=0, lty=3) # Residuals
-ggplot(visuals_assumptions,aes(x=residual)) + geom_histogram(bins=20, color="black") # QQ-plot for normality
-ggplot(visuals_assumptions,aes(sample=residual)) + stat_qq() + stat_qq_line() # Residuals vs Fitted for homoscedasticity
-#check perfomrance of the model 
+# Visual checks for model 3
+visuals_assumptions <- data.frame(
+  predicted = predict(Liking_null),
+  residual  = residuals(Liking_null),
+  referrer  = food_data_long$Palatability
+)
+
+ggplot(visuals_assumptions, aes(x = predicted, y = residual, colour = referrer)) +
+  geom_point() +
+  geom_hline(yintercept = 0, lty = 3)
+
+ggplot(visuals_assumptions, aes(x = residual)) +
+  geom_histogram(bins = 20, color = "black")
+
+ggplot(visuals_assumptions, aes(sample = residual)) +
+  stat_qq() +
+  stat_qq_line()
+
+# Global model diagnostics
 check_model(Liking_null)
 
-#Model comparison is optional but can be done with a model without fixed effect
-#Get model-predicted estimated marginal means (EMMs)
-
-
+# Estimated fixed effects (EMMs-style output) and random effects
 model_ci_liking <- model_parameters(Liking_null, ci = 0.95)
 print(model_ci_liking)
 # Fixed Effects 
@@ -267,10 +306,13 @@ print(model_ci_liking)
 #SD (Residual)               |       14.02
 #plots
 #::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-fof_null = lmer(Frequency_of_consumption ~ Palatability 
-                + Category 
-                + (1|Participant),
-                data = food_data_long)
+# Model 4: Frequency of consumption
+
+fof_null <- lmer(
+  Frequency_of_consumption ~ Palatability + Category + (1 | Participant),
+  data = food_data_long
+)
+
 summary(fof_null)
 #REML criterion at convergence: 27028.8
 
@@ -299,7 +341,28 @@ summary(fof_null)
 #CategoryCmb -0.600  0.493       
 #CategoryFat -0.506  0.330  0.595
 
-#Get model-predicted estimated marginal means (EMMs)
+# Visual checks for model 4
+visuals_assumptions <- data.frame(
+  predicted = predict(fof_null),
+  residual  = residuals(fof_null),
+  referrer  = food_data_long$Palatability
+)
+
+ggplot(visuals_assumptions, aes(x = predicted, y = residual, colour = referrer)) +
+  geom_point() +
+  geom_hline(yintercept = 0, lty = 3)
+
+ggplot(visuals_assumptions, aes(x = residual)) +
+  geom_histogram(bins = 20, color = "black")
+
+ggplot(visuals_assumptions, aes(sample = residual)) +
+  stat_qq() +
+  stat_qq_line()
+
+# Global model diagnostics
+check_model(fof_null)
+
+# Extract fixed and random effects for reporting
 model_ci_fof <- model_parameters(fof_null, ci = 0.95)
 print(model_ci_fof)
 # Fixed Effects 
@@ -317,11 +380,15 @@ print(model_ci_fof)
 #-----------------------------------------
 #SD (Intercept: Participant) |        1.46
 #SD (Residual)               |        4.93
+
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-health_null = lmer(Healthiness ~ Palatability 
-                   + Category 
-                   + (1|Participant),
-                   data = food_data_long)
+# Model 5: Perceived healthiness
+
+health_null <- lmer(
+  Healthiness ~ Palatability + Category + (1 | Participant),
+  data = food_data_long
+)
+
 summary(health_null)
 #REML criterion at convergence: 40895.2
 #Scaled residuals: 
@@ -349,9 +416,31 @@ summary(health_null)
 #CategoryCmb -0.570  0.493       
 #CategoryFat -0.480  0.330  0.595
 
-#Get model-predicted estimated marginal means (EMMs)
+# Visual checks for model 5
+visuals_assumptions <- data.frame(
+  predicted = predict(health_null),
+  residual  = residuals(health_null),
+  referrer  = food_data_long$Palatability
+)
+
+ggplot(visuals_assumptions, aes(x = predicted, y = residual, colour = referrer)) +
+  geom_point() +
+  geom_hline(yintercept = 0, lty = 3)
+
+ggplot(visuals_assumptions, aes(x = residual)) +
+  geom_histogram(bins = 20, color = "black")
+
+ggplot(visuals_assumptions, aes(sample = residual)) +
+  stat_qq() +
+  stat_qq_line()
+
+# Global model diagnostics
+check_model(health_null)
+
+# Extract fixed and random effects with CIs
 model_ci_health <- model_parameters(health_null, ci = 0.95)
 print(model_ci_health)
+
 # Fixed Effects 
 
 #Parameter              | Coefficient |   SE |           95% CI | t(4458) |      p
