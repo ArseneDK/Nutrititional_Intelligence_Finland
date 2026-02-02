@@ -38,16 +38,13 @@ library(parameters)   # model_parameters for CIs and fixed/random effects
 # Set working directory (use the one appropriate for your system)
 # Windows path (lab server)
 setwd("P:/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/03_Data/05_Food Ratings Data")
+#Data import and cleaning
 food_data_long <- read.csv("0_Complete_pictureset_data_long.csv")
 
 # Mac path (mounted volume) – uncomment when running on Mac
 # setwd("/Volumes/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/03_Data/05_Food Ratings Data")
 # food_data_long <- read.csv("0_Complete_pictureset_data_long.csv")
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-#Data import and cleaning
-
-# Import picture‑set data
-food_data <- read.csv("0_Complete_pictureset_data.csv")
 
 # Drop first column (index column created when exporting from R/Excel)
 food_data_long <- food_data_long[, -1]
