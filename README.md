@@ -5,3 +5,7 @@ The following scripts are uploaded:
 - 01_Ttest and correlations (ex., Figure 1 statistics)
 - 02_LMMs
 - 03_Table 2 Analysis
+
+The dataset used for analysis in csv long and wide format (with average values per food item) is provided under the names:
+- 0_Complete_pictureset_data_long.csv
+- 0_Complete_pictureset_data.csv
