@@ -5,8 +5,8 @@
 # Puprpose: Test effects of palatability and category on ratings, accounting for repeated measures per participant.
 # Script: Mixed-effects models for food ratings (EED, satiety, liking, etc.)
 #
-# created: 18.06.2025
-# last updated: 08.10.2025
+# Created: 18.06.2025
+# Last updated: 08.16.2026
 #
 # ============================================================================================================================================== 
 #Clear environment
@@ -235,32 +235,32 @@ Liking_null <- lmer(
 )
 
 summary(Liking_null)
-#REML criterion at convergence: 36364.1
+# REML criterion at convergence: 36364.1
 
-#Scaled residuals: 
+# Scaled residuals: 
 #  Min      1Q  Median      3Q     Max 
-#-4.3422 -0.5551  0.0169  0.6836  3.0143 
+# -4.3422 -0.5551  0.0169  0.6836  3.0143 
 
-#Random effects:
+# Random effects:
 #  Groups      Name        Variance Std.Dev.
-#Participant (Intercept)  19.63    4.43   
-#Residual                196.43   14.02   
-#Number of obs: 4464, groups:  Participant, 62
+# Participant (Intercept)  19.63    4.43   
+# Residual                196.43   14.02   
+# Number of obs: 4464, groups:  Participant, 62
 
-#Fixed effects:
+# Fixed effects:
 #                      Estimate   Std. Error  df      t value Pr(>|t|)    
-#(Intercept)           54.1296     0.8270  217.0299  65.451  < 2e-16 ***
-#PalatabilityNot HPF    3.0178     0.4951 4399.0000   6.095  1.19e-09 ***
-#CategoryCombo          6.5527     0.5783 4399.0000  11.332  < 2e-16 ***
-#CategoryFat            3.4474     0.5752 4399.0000   5.993  2.22e-09 ***
+# (Intercept)           54.1296     0.8270  217.0299  65.451  < 2e-16 ***
+# PalatabilityNot HPF    3.0178     0.4951 4399.0000   6.095  1.19e-09 ***
+# CategoryCombo          6.5527     0.5783 4399.0000  11.332  < 2e-16 ***
+# CategoryFat            3.4474     0.5752 4399.0000   5.993  2.22e-09 ***
 #  ---
 #  Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-#Correlation of Fixed Effects:
+# Correlation of Fixed Effects:
 #  (Intr) PlNHPF CtgryC
-#PltbltyNHPF -0.571              
-#CategoryCmb -0.583  0.493       
-#CategoryFat -0.491  0.330  0.595
+# PltbltyNHPF -0.571              
+# CategoryCmb -0.583  0.493       
+# CategoryFat -0.491  0.330  0.595
 
 # Visual checks for model 3
 visuals_assumptions <- data.frame(
@@ -288,20 +288,20 @@ model_ci_liking <- model_parameters(Liking_null, ci = 0.95)
 print(model_ci_liking)
 # Fixed Effects 
 
-#Parameter              | Coefficient |   SE |         95% CI | t(4458) |      p
+# Parameter              | Coefficient |   SE |         95% CI | t(4458) |      p
 #-------------------------------------------------------------------------------
-#(Intercept)            |       54.13 | 0.83 | [52.51, 55.75] |   65.45 | < .001
-#Palatability [Not HPF] |        3.02 | 0.50 | [ 2.05,  3.99] |    6.10 | < .001
-#Category [Combo]       |        6.55 | 0.58 | [ 5.42,  7.69] |   11.33 | < .001
-#Category [Fat]         |        3.45 | 0.58 | [ 2.32,  4.58] |    5.99 | < .001
+# (Intercept)            |       54.13 | 0.83 | [52.51, 55.75] |   65.45 | < .001
+# Palatability [Not HPF] |        3.02 | 0.50 | [ 2.05,  3.99] |    6.10 | < .001
+# Category [Combo]       |        6.55 | 0.58 | [ 5.42,  7.69] |   11.33 | < .001
+# ategory [Fat]         |        3.45 | 0.58 | [ 2.32,  4.58] |    5.99 | < .001
 
 # Random Effects 
 
-#Parameter                   | Coefficient
+# Parameter                   | Coefficient
 #-----------------------------------------
-#SD (Intercept: Participant) |        4.43
-#SD (Residual)               |       14.02
-#plots
+# SD (Intercept: Participant) |        4.43
+# SD (Residual)               |       14.02
+# plots
 #::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # Model 4: Frequency of consumption
 
@@ -311,32 +311,32 @@ fof_null <- lmer(
 )
 
 summary(fof_null)
-#REML criterion at convergence: 27028.8
+# REML criterion at convergence: 27028.8
 
-#Scaled residuals: 
+# Scaled residuals: 
 #  Min      1Q  Median      3Q     Max 
-#-1.7815 -0.6293 -0.3291  0.5088  5.4068 
+# -1.7815 -0.6293 -0.3291  0.5088  5.4068 
 
-#Random effects:
+# Random effects:
 #  Groups      Name        Variance Std.Dev.
-#Participant (Intercept)  2.122   1.457   
-#Residual                24.259   4.925   
-#Number of obs: 4464, groups:  Participant, 62
+# Participant (Intercept)  2.122   1.457   
+# Residual                24.259   4.925   
+# Number of obs: 4464, groups:  Participant, 62
 
-#Fixed effects:
+# Fixed effects:
 #                         Estimate Std. Error        df t value Pr(>|t|)    
-#(Intercept)            1.6009     0.2821  242.2598   5.674 3.96e-08 ***
-#PalatabilityNot HPF    1.2476     0.1740 4399.0000   7.170 8.73e-13 ***
-#CategoryCombo          0.2929     0.2032 4399.0000   1.442     0.15    
-#CategoryFat            2.0356     0.2021 4399.0000  10.070  < 2e-16 ***
+# (Intercept)            1.6009     0.2821  242.2598   5.674 3.96e-08 ***
+# PalatabilityNot HPF    1.2476     0.1740 4399.0000   7.170 8.73e-13 ***
+# CategoryCombo          0.2929     0.2032 4399.0000   1.442     0.15    
+# CategoryFat            2.0356     0.2021 4399.0000  10.070  < 2e-16 ***
 #  ---
 #  Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-#Correlation of Fixed Effects:
+# Correlation of Fixed Effects:
 #  (Intr) PlNHPF CtgryC
-#PltbltyNHPF -0.589              
-#CategoryCmb -0.600  0.493       
-#CategoryFat -0.506  0.330  0.595
+# PltbltyNHPF -0.589              
+# CategoryCmb -0.600  0.493       
+# CategoryFat -0.506  0.330  0.595
 
 # Visual checks for model 4
 visuals_assumptions <- data.frame(
@@ -364,19 +364,19 @@ model_ci_fof <- model_parameters(fof_null, ci = 0.95)
 print(model_ci_fof)
 # Fixed Effects 
 
-#Parameter              | Coefficient |   SE |        95% CI | t(4458) |      p
+# Parameter              | Coefficient |   SE |        95% CI | t(4458) |      p
 #------------------------------------------------------------------------------
-#(Intercept)            |        1.60 | 0.28 | [ 1.05, 2.15] |    5.67 | < .001
-#Palatability [Not HPF] |        1.25 | 0.17 | [ 0.91, 1.59] |    7.17 | < .001
-#Category [Combo]       |        0.29 | 0.20 | [-0.11, 0.69] |    1.44 | 0.150 
-#Category [Fat]         |        2.04 | 0.20 | [ 1.64, 2.43] |   10.07 | < .001
+# (Intercept)            |        1.60 | 0.28 | [ 1.05, 2.15] |    5.67 | < .001
+# Palatability [Not HPF] |        1.25 | 0.17 | [ 0.91, 1.59] |    7.17 | < .001
+# Category [Combo]       |        0.29 | 0.20 | [-0.11, 0.69] |    1.44 | 0.150 
+# Category [Fat]         |        2.04 | 0.20 | [ 1.64, 2.43] |   10.07 | < .001
 
 # Random Effects 
 
-#Parameter                   | Coefficient
+# Parameter                   | Coefficient
 #-----------------------------------------
-#SD (Intercept: Participant) |        1.46
-#SD (Residual)               |        4.93
+# SD (Intercept: Participant) |        1.46
+# SD (Residual)               |        4.93
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # Model 5: Perceived healthiness
@@ -387,31 +387,31 @@ health_null <- lmer(
 )
 
 summary(health_null)
-#REML criterion at convergence: 40895.2
-#Scaled residuals: 
+# REML criterion at convergence: 40895.2
+# Scaled residuals: 
 #  Min      1Q  Median      3Q     Max 
-#-2.7583 -0.7224 -0.1277  0.7342  2.9512 
+# -2.7583 -0.7224 -0.1277  0.7342  2.9512 
 
-#Random effects:
+# Random effects:
 #  Groups      Name        Variance Std.Dev.
-#Participant (Intercept)  59.56    7.718  
-#Residual                541.92   23.279  
-#Number of obs: 4464, groups:  Participant, 62
+# Participant (Intercept)  59.56    7.718  
+# Residual                541.92   23.279  
+# Number of obs: 4464, groups:  Participant, 62
 #
-#Fixed effects:
+# Fixed effects:
 #  Estimate Std. Error        df t value Pr(>|t|)    
-#(Intercept)           36.3391     1.4050  201.1411  25.863  < 2e-16 ***
+#  (Intercept)           36.3391     1.4050  201.1411  25.863  < 2e-16 ***
 #  PalatabilityNot HPF    6.2193     0.8223 4399.0000   7.563 4.77e-14 ***
 #  CategoryCombo        -12.3966     0.9605 4399.0000 -12.907  < 2e-16 ***
 #  CategoryFat            6.4610     0.9554 4399.0000   6.763 1.53e-11 ***
 #  ---
 #  Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-#Correlation of Fixed Effects:
+# Correlation of Fixed Effects:
 #  (Intr) PlNHPF CtgryC
-#PltbltyNHPF -0.559              
-#CategoryCmb -0.570  0.493       
-#CategoryFat -0.480  0.330  0.595
+# PltbltyNHPF -0.559              
+# CategoryCmb -0.570  0.493       
+# CategoryFat -0.480  0.330  0.595
 
 # Visual checks for model 5
 visuals_assumptions <- data.frame(
@@ -442,17 +442,17 @@ print(model_ci_health)
 
 #Parameter              | Coefficient |   SE |           95% CI | t(4458) |      p
 #---------------------------------------------------------------------------------
-#(Intercept)            |       36.34 | 1.41 | [ 33.58,  39.09] |   25.86 | < .001
-#Palatability [Not HPF] |        6.22 | 0.82 | [  4.61,   7.83] |    7.56 | < .001
-#Category [Combo]       |      -12.40 | 0.96 | [-14.28, -10.51] |  -12.91 | < .001
-#Category [Fat]         |        6.46 | 0.96 | [  4.59,   8.33] |    6.76 | < .001
+# (Intercept)            |       36.34 | 1.41 | [ 33.58,  39.09] |   25.86 | < .001
+# Palatability [Not HPF] |        6.22 | 0.82 | [  4.61,   7.83] |    7.56 | < .001
+# Category [Combo]       |      -12.40 | 0.96 | [-14.28, -10.51] |  -12.91 | < .001
+# Category [Fat]         |        6.46 | 0.96 | [  4.59,   8.33] |    6.76 | < .001
 
 # Random Effects 
 
-#Parameter                   | Coefficient
+# Parameter                   | Coefficient
 #  -----------------------------------------
-#SD (Intercept: Participant) |        7.72
-#SD (Residual)               |       23.28
+# SD (Intercept: Participant) |        7.72
+# SD (Residual)               |       23.28
 
 #:::::::::::::::::::::::::::THE END:::::::::::::::::::::::::::::::::::::::::::::
 

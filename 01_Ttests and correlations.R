@@ -5,8 +5,8 @@
 # Purpose: Check assumptions, run frequentist and Bayesian tests, and visualise correlations.
 # Script: Energy density vs estimated energy density (HPF vs non‑HPF)t-test and correlations
 #
-# created: 18.06.2025
-# last updated: 07.10.2025 
+# Created: 18.06.2025
+# Last updated: 07.09.2026 
 #
 # ============================================================================================================================================== 
 #Clear environment
