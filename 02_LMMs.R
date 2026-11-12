@@ -9,8 +9,6 @@
 # Last updated: 08.16.2026
 #
 # ============================================================================================================================================== 
-#Clear environment
-rm(list=ls())
 
 # Install packages once (comment out in regular use)
 # install.packages(c(
@@ -20,7 +18,6 @@ rm(list=ls())
 # ))
 
 # Load libraries used in this script
-{
 library(tidyverse)    # data handling and plotting
 library(ggpubr)       # publication-ready plots (if needed later)
 library(knitr)        # reporting
@@ -33,17 +30,18 @@ library(performance)  # model diagnostics (check_model)
 library(broom.mixed)  # tidy model outputs
 library(sjstats)      # additional model summaries/effect sizes
 library(parameters)   # model_parameters for CIs and fixed/random effects
-}
-#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-# Set working directory (use the one appropriate for your system)
-# Windows path (lab server)
-setwd("P:/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/03_Data/05_Food Ratings Data")
-#Data import and cleaning
-food_data_long <- read.csv("0_Complete_pictureset_data_long.csv")
 
-# Mac path (mounted volume) – uncomment when running on Mac
-# setwd("/Volumes/h345/obrain_labspace/Projects/PhD_projects/MARVEL/02_MARVEL I_Macronutrient study/03_Experiment/Aim 1/FoodRating task/03_Data/05_Food Ratings Data")
-# food_data_long <- read.csv("0_Complete_pictureset_data_long.csv")
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+# Paths are relative to the repository root, so set working directory to
+# the location of this script (02_LMMs.R) before running, if it is not.
+# Open the .Rproj file ( or start R in the repo folder) first.
+# here::::here() always resolves to the repositoryroot.
+library(here)
+
+
+#Data import and cleaning
+food_data_long <- read.csv(here("data", "0_Complete_pictureset_data_long.csv"))
+
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 # Drop first column (index column created when exporting from R/Excel)
@@ -132,7 +130,6 @@ ggplot(visuals_assumptions,aes(sample=residual)) +
 # Check random effects structure and overall model performance
 check_model(EED_null)   # global diagnostics (performance package) -> (Linearity, Posterior predictive check, Variance Collinearity, Normality of residuals and random effect)
 
-.............................................
 ## Extract fixed and random effects with confidence intervals
 model_ci_eed <- model_parameters(EED_null, ci = 0.95)
 print(model_ci_eed)
@@ -152,10 +149,10 @@ print(model_ci_eed)
 #SD (Intercept: Participant) |        9.95
 #SD (Residual)               |       17.36
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-#Model 2: Expected satiety
+#Model 2: Expected_Satiation
 
 ES_null <- lmer(
-  Expected_Satiety ~ Palatability + Category + (1 | Participant),
+  Expected_Satiation ~ Palatability + Category + (1 | Participant),
   data = food_data_long
 )
 
