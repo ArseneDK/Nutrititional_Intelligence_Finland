@@ -9,8 +9,9 @@
 # Last updated: 07.09.2026 
 #
 # ============================================================================================================================================== 
-#Clear environment
-rm(list=ls())
+
+
+# Run this script in a fresh R session (RStudio: Session > Restart R).
 
 ###Package and setup section
 
@@ -26,9 +27,10 @@ library(tidyverse)   # data wrangling, piping, plotting
 library(coda)        # MCMC diagnostics (used by BayesFactor / DFBA)
 library(Matrix)      # matrix operations (dependency)
 library(ggpubr)      # ggscatter and publication‑ready plots
-library(BayesFactor) # Bayesian t‑tests and correlations
+library(BayesFactor) # ttestBF(), correlationBF(): Bayes factors
 library(knitr)       # reporting
 library(DFBA)        # additional Bayesian analyses
+library(here)        # here::::here() always resolves to the repositoryroot.
 library(dplyr)       # data manipulation (mostly via tidyverse)
 library(gridExtra)   # arrange multiple plots
 library(car)         # leveneTest for homogeneity of variance

@@ -11,7 +11,7 @@
 # ============================================================================================================================================== 
 
 #Clear environment
-rm(list=ls())
+# Run this script in a fresh R session (RStudio: Session > Restart R).
 
 # Install packages once (comment out during normal use)
 # install.packages(c("tidyverse", "car", "effsize"))

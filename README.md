@@ -9,3 +9,7 @@ The following scripts are uploaded:
 The dataset used for analysis in csv long and wide format (with average values per food item) is provided under the names:
 - 0_Complete_pictureset_data_long.csv
 - 0_Complete_pictureset_data.csv
+
+
+
+## How to run

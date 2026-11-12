@@ -18,8 +18,8 @@
 # ))
 
 # Load libraries used in this script
-library(tidyverse)    # data handling and plotting
-library(ggpubr)       # publication-ready plots (if needed later)
+library(tidyverse)    # data wrangling (dplyr) and plotting (ggplot2)
+library(ggpubr)       # ggscatter(): scatter plots with regression line and correlation label
 library(knitr)        # reporting
 library(dplyr)        # data manipulation
 library(Matrix)       # required by lme4
@@ -30,13 +30,13 @@ library(performance)  # model diagnostics (check_model)
 library(broom.mixed)  # tidy model outputs
 library(sjstats)      # additional model summaries/effect sizes
 library(parameters)   # model_parameters for CIs and fixed/random effects
+library(here)         # here::::here() always resolves to the repositoryroot.
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 # Paths are relative to the repository root, so set working directory to
 # the location of this script (02_LMMs.R) before running, if it is not.
 # Open the .Rproj file ( or start R in the repo folder) first.
-# here::::here() always resolves to the repositoryroot.
-library(here)
+
 
 
 #Data import and cleaning
