@@ -1,24 +1,24 @@
 # ==============================================================================
 # 
 # Nutritional intelligence in FinnFoodPics
-# created by Arsene Kanyamibwa (arsene.kanyamibwa@helsinki.fi) and reviewed by Manon Chédeville (manon.chedeville@helsinki.fi)
+# created by Arsene Kanyamibwa (arsene.kanyamibwa@helsinki.fi) and reviewed by Manon Chédeville (manon.chedeville@helsinki.fi), Sherwin NJ. (sherwin.nedaeijanbesaraei@helsinki.fi).
 # Purpose: Check assumptions, run frequentist and Bayesian tests, and visualise correlations.
 # Script: Energy density vs estimated energy density (HPF vs non‑HPF)t-test and correlations
 #
 # Created: 18.06.2025
-# Last updated: 07.09.2026
+# Last updated: 16.11.2026
+# Updated by: 16.11.2026, comments add, light refactoring for clearity, Sherwin NJ.
 #
 # ==============================================================================
 # Run this script in a fresh R session (RStudio: Session > Restart R).
 
-# Divider convention:
 #   #:::::  Major numbered sections, such as 1. SETUP or 2. ASSUMPTIONS.
 #   #=====  Numbered subsections, such as 2.1 AED or 2.2 EED.
 #   #-----  Output separators: printed results within a subsection.
 # Plain comments describe individual commands or interpretation.
 
-#:::::::::::::::::::::::::::::::::::: 1. SETUP :::::::::::::::::::::::::::::::::
-#===== 1.1 PACKAGE SETUP =======================================================
+#::::::::::::::::::::::::::::::::::: 1. SETUP ::::::::::::::::::::::::::::::::::
+#============================== 1.1 PACKAGE SETUP ==============================
 
 
 # Check, install, and load the packages required by this script.
@@ -55,7 +55,7 @@ invisible(
 )
 }
 
-#===== 1.2 DATA IMPORT AND CLEANING ============================================
+#========================= 1.2 DATA IMPORT AND CLEANING ========================
 # Import and prepare the analysis data.
 # The path is built from the repository root so the script is portable.
 # Categorical variables are converted to factors for modelling.
@@ -80,7 +80,7 @@ invisible(
     )
 }
 
-#:::::::::::::::::::::::::::: 2. ASSUMPTION CHECKS :::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::: 2. ASSUMPTION CHECKS ::::::::::::::::::::::::::::
 
 # Shapiro-Wilk normality check with a plain-language verdict.
 #   x     : numeric vector to test
@@ -105,21 +105,21 @@ check_normality <- function(x, label, alpha = 0.05) {
 ##Actual Energy density (AED)
 
 {
-#==================== 2.1 NORMALITY OF AED =====================================
+#============================= 2.1 NORMALITY OF AED ============================
 #
 check_normality(food_data$Energy_density, "AED (full sample)")
 #-------------------------------------------------------------------------------
-#OUTPUT:
+#------------------------------------ OUTPUT -----------------------------------
 #AED (full sample): W = 0.9892, p = 0.802
 #   -> no significant deviation from normality
 #-------------------------------------------------------------------------------
 
 
 
-#==================== 2.2 HOMOGENEITY OF AED ===================================
+#============================ 2.2 HOMOGENEITY OF AED ===========================
 # Check homogeneity of variance for AED by palatability
 leveneTest(Energy_density ~ Palatability, data = food_data)
-#------------------------------OUTPUT-------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # 
 # Levene's Test for Homogeneity of Variance (center = median)
 #      Df F value  Pr(>F)
@@ -131,10 +131,10 @@ leveneTest(Energy_density ~ Palatability, data = food_data)
 
 
 
-#==================== 2.3 T-TEST ON AED ========================================
+#============================== 2.3 T-TEST ON AED ==============================
 # Run t-test on AED, assuming equal variances based on Levene's test.
 t.test(Energy_density ~ Palatability, data = food_data, var.equal = TRUE)
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 #
 #        Two Sample t-test
 #
@@ -149,20 +149,20 @@ t.test(Energy_density ~ Palatability, data = food_data, var.equal = TRUE)
 #             3.561429              3.571568
 #-------------------------------------------------------------------------------
 
-#==================== 2.4 ESTIMATED ENERGY DENSITY =============================
+#========================= 2.4 ESTIMATED ENERGY DENSITY ========================
 #
 check_normality(food_data$Estimated_ED, label = "EED (full sample)")
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # 
 # EED (full sample): W = 0.9092, p = 7.301e-05
 #  -> significant deviation from normality
 #-------------------------------------------------------------------------------
 
 
-#==================== 2.5 NORMALITY OF EED =====================================
+#============================= 2.5 NORMALITY OF EED ============================
 #
 shapiro.test(food_data$Estimated_ED)
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 #         Shapiro-Wilk normality test
 #
 # data:  food_data$Estimated_ED
@@ -173,10 +173,10 @@ shapiro.test(food_data$Estimated_ED)
 
 
 
-#==================== 2.6 WELCH T-TEST FOR EED =================================
+#=========================== 2.6 WELCH T-TEST FOR EED ==========================
 # Use Welch t‑test for EED (non‑normal distribution)
 t.test(Estimated_ED ~ Palatability, data = food_data)
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 #
 #        Welch Two Sample t-test
 # data:  Estimated_ED by Palatability
@@ -191,7 +191,7 @@ t.test(Estimated_ED ~ Palatability, data = food_data)
 #-------------------------------------------------------------------------------
 }
 
-#:::::::::::::::::::::::::::: 3. SUBGROUP ANALYSIS :::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::: 3. SUBGROUP ANALYSIS ::::::::::::::::::::::::::::
 ### Subsetting and correlation choices
 
 {
@@ -199,10 +199,10 @@ t.test(Estimated_ED ~ Palatability, data = food_data)
 filtered_data_HPF  <- food_data |> filter(Palatability == "HPF")
 filtered_data_NHPF <- food_data |> filter(Palatability == "Not HPF")
 
-#==================== 3.1 SUBGROUP NORMALITY CHECKS ============================
+#======================== 3.1 SUBGROUP NORMALITY CHECKS ========================
 #
 shapiro.test(filtered_data_HPF$Energy_density)
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # 
 #        Shapiro-Wilk normality test
 #
@@ -213,7 +213,7 @@ shapiro.test(filtered_data_HPF$Energy_density)
 
 
 shapiro.test(filtered_data_NHPF$Energy_density)
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # 
 #        Shapiro-Wilk normality test
 #
@@ -224,7 +224,7 @@ shapiro.test(filtered_data_NHPF$Energy_density)
 
 
 shapiro.test(filtered_data_HPF$Estimated_ED)
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # 
 #        Shapiro-Wilk normality test
 #
@@ -234,7 +234,7 @@ shapiro.test(filtered_data_HPF$Estimated_ED)
 #-------------------------------------------------------------------------------
 
 shapiro.test(filtered_data_NHPF$Estimated_ED)
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # 
 #        Shapiro-Wilk normality test
 #
@@ -248,12 +248,12 @@ shapiro.test(filtered_data_NHPF$Estimated_ED)
 # correlations to assess monotonic associations without assuming normality.
 }
 
-#:::::::::::::::::::::::::::: 4. VISUALISATIONS ::::::::::::::::::::::::::::::::
+#:::::::::::::::::::::::::::::: 4. VISUALISATIONS ::::::::::::::::::::::::::::::
 ##Plots
 #Scatter plots AED versus EED
 
 {
-#==================== 4.1 HPF SCATTER PLOT =====================================
+#============================= 4.1 HPF SCATTER PLOT ============================
 p1 <- ggscatter(filtered_data_HPF, x = "Energy_density", y = "Estimated_ED", 
                 add = "reg.line",
                 ggtheme = theme_minimal(),
@@ -284,7 +284,7 @@ p1 <- ggscatter(filtered_data_HPF, x = "Energy_density", y = "Estimated_ED",
 # Display the HPF scatter plot.
 p1
 #...............................................................................
-#==================== 4.2 NON-HPF SCATTER PLOT =================================
+#=========================== 4.2 NON-HPF SCATTER PLOT ==========================
 p2 <- ggscatter(filtered_data_NHPF, x = "Energy_density", y = "Estimated_ED", 
                 add = "reg.line",
                 ggtheme = theme_minimal(),
@@ -314,21 +314,21 @@ p2 <- ggscatter(filtered_data_NHPF, x = "Energy_density", y = "Estimated_ED",
 # Display the non-HPF scatter plot.
 p2
 #...........................................................................
-#==================== 4.3 ARRANGE SCATTER PLOTS ================================
+#========================== 4.3 ARRANGE SCATTER PLOTS ==========================
 # Arrange the HPF and non-HPF plots vertically in two rows.
 grid.arrange(p1, p2, nrow = 2)
 # Arrange HPF vs non‑HPF clearly (e.g. side‑by‑side)
 grid.arrange(p1, p2, nrow = 1)
 }
 #:::::::::::::::::::: 5. CORRELATIONS AND BAYESIAN ANALYSES ::::::::::::::::::::
-#===== 5.1 SPEARMAN CORRELATIONS ===============================================
+#========================== 5.1 SPEARMAN CORRELATIONS ==========================
 
 {
 
-#==================== 5.1.1 FULL SAMPLE: EED VS ED =============================
+#========================= 5.1.1 FULL SAMPLE: EED VS ED ========================
 cor.test(food_data$Estimated_ED, food_data$Energy_density,
          method = "spearman")
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # Spearman's rank correlation rho
 #
 # data:  food_data$Estimated_ED and food_data$Energy_density
@@ -340,10 +340,10 @@ cor.test(food_data$Estimated_ED, food_data$Energy_density,
 #-------------------------------------------------------------------------------
 
 
-#==================== 5.1.2 HPF: EED VS ED =====================================
+#============================= 5.1.2 HPF: EED VS ED ============================
 cor.test(filtered_data_HPF$Estimated_ED, filtered_data_HPF$Energy_density,
          method = "spearman")
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # Spearman's rank correlation rho
 #
 # data:  filtered_data_HPF$Estimated_ED and filtered_data_HPF$Energy_density
@@ -355,10 +355,10 @@ cor.test(filtered_data_HPF$Estimated_ED, filtered_data_HPF$Energy_density,
 #-------------------------------------------------------------------------------
 
 
-#==================== 5.1.3 NON-HPF: EED VS ED =================================
+#=========================== 5.1.3 NON-HPF: EED VS ED ==========================
 cor.test(filtered_data_NHPF$Estimated_ED, filtered_data_NHPF$Energy_density,
          method = "spearman")
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # Spearman's rank correlation rho
 #
 # data:  filtered_data_NHPF$Estimated_ED and filtered_data_NHPF$Energy_density
@@ -371,19 +371,19 @@ cor.test(filtered_data_NHPF$Estimated_ED, filtered_data_NHPF$Energy_density,
 
 }
 
-#===== 5.2 BAYESIAN T-TESTS ====================================================
+#============================= 5.2 BAYESIAN T-TESTS ============================
 # Compare actual and estimated energy density between HPF and non-HPF groups.
 
 {
 # Pass numeric vectors explicitly because the formula interface can return
 # a list error with some BayesFactor and R version combinations.
-#==================== 5.2.1 AED BY PALATABILITY ================================
+#========================== 5.2.1 AED BY PALATABILITY ==========================
 # Bayesian t-test for actual energy density (AED).
 ttestBF(
   x = food_data$Energy_density[food_data$Palatability == "HPF"],
   y = food_data$Energy_density[food_data$Palatability == "Not HPF"]
 )
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # Bayes factor analysis
 # [1] Alt., r=0.707 : 0.2484097 ±0.01%
 #
@@ -394,13 +394,13 @@ ttestBF(
 #-------------------------------------------------------------------------------
 
 
-#==================== 5.2.2 EED BY PALATABILITY ================================
+#========================== 5.2.2 EED BY PALATABILITY ==========================
 # Bayesian t-test for estimated energy density (EED).
 ttestBF(
   x = food_data$Estimated_ED[food_data$Palatability == "HPF"],
   y = food_data$Estimated_ED[food_data$Palatability == "Not HPF"]
 )
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # Bayes factor analysis
 # [1] Alt., r=0.707 : 0.7169468 ±0.01%
 #
@@ -412,16 +412,16 @@ ttestBF(
 }
 #...............................................................................
 
-#===== 5.3 BAYESIAN CORRELATIONS ===============================================
+#========================== 5.3 BAYESIAN CORRELATIONS ==========================
 # Estimate exploratory Bayes factors for the associations between AED and EED.
 # correlationBF is a Pearson-type Bayes factor and complements the Spearman
 # correlations reported in subsection 5.1.
 
 {
-#==================== 5.3.1 FULL SAMPLE: AED VS EED ============================
+#======================== 5.3.1 FULL SAMPLE: AED VS EED ========================
 correlationBF(y = food_data$Energy_density,
               x = food_data$Estimated_ED)
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # Bayes factor analysis
 # [1] Alt., r=0.333 : 32.28543 ±0%
 #
@@ -432,10 +432,10 @@ correlationBF(y = food_data$Energy_density,
 #-----------------------------------------------------------------------
 
 
-#==================== 5.3.2 HPF: AED VS EED ===================================
+#============================ 5.3.2 HPF: AED VS EED ============================
 correlationBF(y = filtered_data_HPF$Energy_density,
               x = filtered_data_HPF$Estimated_ED)
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # Bayes factor analysis
 # [1] Alt., r=0.333 : 371.2954 ±0%
 #
@@ -446,10 +446,10 @@ correlationBF(y = filtered_data_HPF$Energy_density,
 #-----------------------------------------------------------------------
 
 
-#==================== 5.3.3 NON-HPF: AED VS EED ================================
+#========================== 5.3.3 NON-HPF: AED VS EED ==========================
 correlationBF(y = filtered_data_NHPF$Energy_density,
               x = filtered_data_NHPF$Estimated_ED)
-#-----------------------------OUTPUT--------------------------------------------
+#------------------------------------ OUTPUT -----------------------------------
 # Bayes factor analysis
 # [1] Alt., r=0.333 : 0.7666349 ±0%
 #
@@ -460,4 +460,4 @@ correlationBF(y = filtered_data_NHPF$Energy_density,
 #-----------------------------------------------------------------------
 }
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-#:::::::::::::::::::::::::::::::::::: THE END ::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::::::::: THE END :::::::::::::::::::::::::::::::::::

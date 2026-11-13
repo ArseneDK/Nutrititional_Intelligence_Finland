@@ -1,63 +1,60 @@
 # ==============================================================================================================================================
 # 
-# Nutritional intellgence in FinnFoodPics
+# Nutritional intelligence in FinnFoodPics
 # created by Arsene Kanyamibwa (arsene.kanyamibwa@helsinki.fi) and reviewed by Manon Chédeville (manon.chedeville@helsinki.fi)
-# Puprpose: Test effects of palatability and category on ratings, accounting for repeated measures per participant.
+# Purpose: Test effects of palatability and category on ratings, accounting for repeated measures per participant.
 # Script: Mixed-effects models for food ratings (EED, satiety, liking, etc.)
 #
 # Created: 18.06.2025
-# Last updated: 08.16.2026
-#
+# updated: 13.11.2026
+# Updated: 16.11.2026, comments add, light refactoring for clearity, Sherwin NJ.
+
 # ============================================================================================================================================== 
 
-# Install packages once (comment out in regular use)
-# install.packages(c(
-#   "tidyverse", "ggpubr", "dplyr", "knitr", "effsize",
-#   "Matrix", "lme4", "broom.mixed", "emmeans", "performance",
-#   "lmerTest", "sjstats", "see", "parameters"
-# ))
+#::::::::::::::::::::::::::::::::::: 1. SETUP ::::::::::::::::::::::::::::::::::
+#============================== 1.1 PACKAGE SETUP ==============================
+{
+required_packages <- c(
+  "tidyverse", "ggpubr", "knitr", "Matrix", "lme4", "lmerTest",
+  "emmeans", "performance", "broom.mixed", "sjstats", "see",
+  "parameters", "here"
+)
 
-# Load libraries used in this script
-library(tidyverse)    # data wrangling (dplyr) and plotting (ggplot2)
-library(ggpubr)       # scatter plots with regression line and correlation label
-library(knitr)        # reporting
-library(dplyr)        # data manipulation
-library(Matrix)       # required by lme4
-library(lme4)         # mixed-effects models
-library(lmerTest)     # p-values/df for lmer models
-library(emmeans)      # estimated marginal means (if needed)
-library(performance)  # model diagnostics (check_model)
-library(broom.mixed)  # tidy model outputs
-library(sjstats)      # additional model summaries/effect sizes
-library(parameters)   # model_parameters for CIs and fixed/random effects
-library(here)         # here::::here() always resolves to the repositoryroot.
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
 
-#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-# Paths are relative to the repository root, so set working directory to
-# the location of this script (02_LMMs.R) before running, if it is not.
-# Open the .Rproj file ( or start R in the repo folder) first.
+if (length(missing_packages) > 0) {
+  install.packages(missing_packages, repos = "https://cloud.r-project.org")
+}
+
+invisible(lapply(required_packages, library, character.only = TRUE))
+}
+
+# Paths are relative to the repository root. Run this script from the
+# repository folder or open the .Rproj file first.
 
 
 
-#Data import and cleaning
-food_data_long <- read.csv(here("data", "0_Complete_pictureset_data_long.csv"))
+#========================= 1.2 DATA IMPORT AND CLEANING ========================
+{
+# Import the long-format data from the repository-relative data directory.
+food_data_long <- read.csv(
+  here("data", "0_Complete_pictureset_data_long.csv")
+)
 
-#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-# Drop first column (index column created when exporting from R/Excel)
+# Drop the first column, which is an export index column.
 food_data_long <- food_data_long[, -1]
 
-# Convert categorical variables to factors for modelling
-{
+# Convert categorical variables to factors for modelling.
   food_data_long$Category       <- factor(food_data_long$Category)
   food_data_long$Palatability   <- factor(food_data_long$Palatability)
   food_data_long$NOVA_Group     <- factor(food_data_long$NOVA_Group)
   food_data_long$Energy_levels  <- factor(food_data_long$Energy_levels)
   food_data_long$Energy_levels2 <- factor(food_data_long$Energy_levels2)
   food_data_long$NOVA_Group2    <- factor(food_data_long$NOVA_Group2)
-}
-# Set explicit factor order for energy levels (used in plotting / modelling)
-{
+
+# Set explicit factor order for energy levels used in modelling.
 food_data_long$Energy_levels <- factor(
   food_data_long$Energy_levels,
   levels = c("HED", "MED", "LED")
@@ -67,34 +64,37 @@ food_data_long$Energy_levels2 <- factor(
   levels = c("VHED", "HED", "MED", "LED", "VLED")
 )
 }
-#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+#:::::::::::::::::::: 2. LINEAR MIXED-EFFECTS MODELS :::::::::::::::::::::::::::
 # Random-intercept model: EED predicted by palatability and category,
 # with participant-specific intercepts to account for repeated ratings.
 
-#Model 1: Estimated energy density (EED)
+#==================== 2.1 MODEL 1: ESTIMATED ENERGY DENSITY ====================
 EED_null <- lmer(
   Estimated_ED ~ Palatability + Category + (1 | Participant),
   data = food_data_long
 )
 
+#============================= 2.1.1 MODEL SUMMARY =============================
 summary(EED_null)
+#------------------------------------ OUTPUT -----------------------------------
 #
 #REML criterion at convergence: 38341.9
 
-#Scaled residuals: 
-#  Min      1Q  Median      3Q     Max 
-#-3.9767 -0.5711  0.1292  0.6706  2.9289 
+#Scaled residuals:
+#  Min      1Q  Median      3Q     Max
+#-3.9767 -0.5711  0.1292  0.6706  2.9289
 
 #Random effects:
 #  Groups      Name        Variance Std.Dev.
-#Participant (Intercept)  98.97    9.948  
-#Residual                301.49   17.363  
+#Participant (Intercept)  98.97    9.948
+#Residual                301.49   17.363
 #Number of obs: 4464, groups:  Participant, 62
 
 #Fixed effects:
-#                          Estimate   Std. Error   df    t value  Pr(>|t|)    
+#                          Estimate   Std. Error   df    t value  Pr(>|t|)
 #   (Intercept)           55.0450     1.4697  102.6913  37.452   <2e-16 ***
-#  PalatabilityNot HPF    0.4384     0.6134  4399.0000   0.715    0.475    
+#  PalatabilityNot HPF    0.4384     0.6134  4399.0000   0.715    0.475
 #  CategoryCombo          9.2320     0.7164  4399.0000  12.887   <2e-16 ***
 #  CategoryFat            9.2444     0.7126  4399.0000  12.973   <2e-16 ***
 #  ---
@@ -102,16 +102,17 @@ summary(EED_null)
 
 #Correlation of Fixed Effects:
 #  (Intr) PlNHPF CtgryC
-#PltbltyNHPF -0.398              
-#CategoryCmb -0.406  0.493       
+#PltbltyNHPF -0.398
+#CategoryCmb -0.406  0.493
 #CategoryFat -0.342  0.330  0.595
 
-# Visual checks of model assumptions (residuals and normality)
+#========================== 2.1.2 VISUAL MODEL CHECKS ==========================
+# Residuals, fitted values, and normality checks.
 visuals_assumptions <- data.frame(
   predicted=predict(EED_null),
   residual = residuals(EED_null),
-  referrer = food_data_long$Palatability
-  ) 
+  referrer = model.frame(EED_null)$Palatability
+  )
 
 # Residuals vs fitted: check homoscedasticity and non-linearity
 ggplot(visuals_assumptions,aes(x=predicted,y=residual, colour= referrer))+
@@ -130,9 +131,11 @@ ggplot(visuals_assumptions,aes(sample=residual)) +
 # Check random effects structure and overall model performance
 check_model(EED_null)   # global diagnostics (performance package) -> (Linearity, Posterior predictive check, Variance Collinearity, Normality of residuals and random effect)
 
-## Extract fixed and random effects with confidence intervals
+#======================== 2.1.3 FIXED AND RANDOM EFFECTS =======================
+# Extract fixed and random effects with 95% confidence intervals.
 model_ci_eed <- model_parameters(EED_null, ci = 0.95)
 print(model_ci_eed)
+#------------------------------------ OUTPUT -----------------------------------
 # Fixed Effects 
 
 #Parameter              | Coefficient |   SE |         95% CI | t(4458) |      p
@@ -148,46 +151,47 @@ print(model_ci_eed)
 #-----------------------------------------
 #SD (Intercept: Participant) |        9.95
 #SD (Residual)               |       17.36
-#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-#Model 2: Expected_Satiation
+#======================= 2.2 MODEL 2: EXPECTED SATIATION =======================
 
 ES_null <- lmer(
   Expected_Satiation ~ Palatability + Category + (1 | Participant),
   data = food_data_long
 )
 
+#============================= 2.2.1 MODEL SUMMARY =============================
 summary(ES_null)
+#------------------------------------ OUTPUT -----------------------------------
 #REML criterion at convergence: 39106.2
-#Scaled residuals: 
-#  Min      1Q  Median      3Q     Max 
-#-3.2977 -0.7079 -0.0335  0.7104  3.3527 
+#Scaled residuals:
+#  Min      1Q  Median      3Q     Max
+#-3.2977 -0.7079 -0.0335  0.7104  3.3527
 
 #Random effects:
 #  Groups      Name        Variance Std.Dev.
-#Participant (Intercept) 163.9    12.80   
-#Residual                356.3    18.87   
+#Participant (Intercept) 163.9    12.80
+#Residual                356.3    18.87
 #Number of obs: 4464, groups:  Participant, 62
 
 #Fixed effects:
-#                       Estimate    Std. Error  df      t value Pr(>|t|)    
+#                       Estimate    Std. Error  df      t value Pr(>|t|)
 #(Intercept)             35.3937     1.8194   90.0367  19.453  < 2e-16 ***
 # PalatabilityNot HPF    3.6337     0.6668 4399.0000   5.450 5.32e-08 ***
-# CategoryCombo          0.8132     0.7787 4399.0000   1.044    0.296    
+# CategoryCombo          0.8132     0.7787 4399.0000   1.044    0.296
 #CategoryFat            7.9855     0.7746 4399.0000  10.309  < 2e-16 ***
 #  ---
 #  Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 #Correlation of Fixed Effects:
 #  (Intr) PlNHPF CtgryC
-#PltbltyNHPF -0.350              
-#CategoryCmb -0.357  0.493       
+#PltbltyNHPF -0.350
+#CategoryCmb -0.357  0.493
 #CategoryFat -0.301  0.330  0.595
 
-# Visual checks for model 2 (same structure as above)
+#========================== 2.2.2 VISUAL MODEL CHECKS ==========================
 visuals_assumptions <- data.frame(
   predicted = predict(ES_null),
   residual  = residuals(ES_null),
-  referrer  = food_data_long$Palatability
+  referrer  = model.frame(ES_null)$Palatability
 )
 
 ggplot(visuals_assumptions, aes(x = predicted, y = residual, colour = referrer)) +
@@ -204,10 +208,12 @@ ggplot(visuals_assumptions, aes(sample = residual)) +
 # Global model diagnostics
 check_model(ES_null)
 
-# Fixed and random effects with 95% CIs
+#======================== 2.2.3 FIXED AND RANDOM EFFECTS =======================
+# Fixed and random effects with 95% confidence intervals.
 model_ci_es <- model_parameters(ES_null, ci = 0.95)
 print(model_ci_es)
-# Fixed Effects 
+#------------------------------------ OUTPUT -----------------------------------
+# Fixed Effects
 
 #Parameter              | Coefficient |   SE |         95% CI | t(4458) |      p
 #-------------------------------------------------------------------------------
@@ -216,22 +222,23 @@ print(model_ci_es)
 #Category [Combo]       |        0.81 | 0.78 | [-0.71,  2.34] |    1.04 | 0.296 
 #Category [Fat]         |        7.99 | 0.77 | [ 6.47,  9.50] |   10.31 | < .001
 
-# Random Effects 
+# Random Effects
 
 #Parameter                   | Coefficient
 #-----------------------------------------
 #  SD (Intercept: Participant) |       12.80
 #  SD (Residual)               |       18.87
 
-#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-# Model 3: Liking
+#============================= 2.3 MODEL 3: LIKING =============================
 
 Liking_null <- lmer(
   Liking ~ Palatability + Category + (1 | Participant),
   data = food_data_long
 )
 
+#============================= 2.3.1 MODEL SUMMARY =============================
 summary(Liking_null)
+#------------------------------------ OUTPUT -----------------------------------
 # REML criterion at convergence: 36364.1
 
 # Scaled residuals: 
@@ -259,11 +266,11 @@ summary(Liking_null)
 # CategoryCmb -0.583  0.493       
 # CategoryFat -0.491  0.330  0.595
 
-# Visual checks for model 3
+#========================== 2.3.2 VISUAL MODEL CHECKS ==========================
 visuals_assumptions <- data.frame(
   predicted = predict(Liking_null),
   residual  = residuals(Liking_null),
-  referrer  = food_data_long$Palatability
+  referrer  = model.frame(Liking_null)$Palatability
 )
 
 ggplot(visuals_assumptions, aes(x = predicted, y = residual, colour = referrer)) +
@@ -280,9 +287,11 @@ ggplot(visuals_assumptions, aes(sample = residual)) +
 # Global model diagnostics
 check_model(Liking_null)
 
-# Estimated fixed effects (EMMs-style output) and random effects
+#======================== 2.3.3 FIXED AND RANDOM EFFECTS =======================
+# Estimated fixed and random effects with 95% confidence intervals.
 model_ci_liking <- model_parameters(Liking_null, ci = 0.95)
 print(model_ci_liking)
+#------------------------------------ OUTPUT -----------------------------------
 # Fixed Effects 
 
 # Parameter              | Coefficient |   SE |         95% CI | t(4458) |      p
@@ -290,7 +299,7 @@ print(model_ci_liking)
 # (Intercept)            |       54.13 | 0.83 | [52.51, 55.75] |   65.45 | < .001
 # Palatability [Not HPF] |        3.02 | 0.50 | [ 2.05,  3.99] |    6.10 | < .001
 # Category [Combo]       |        6.55 | 0.58 | [ 5.42,  7.69] |   11.33 | < .001
-# ategory [Fat]         |        3.45 | 0.58 | [ 2.32,  4.58] |    5.99 | < .001
+# Category [Fat]        |        3.45 | 0.58 | [ 2.32,  4.58] |    5.99 | < .001
 
 # Random Effects 
 
@@ -298,16 +307,16 @@ print(model_ci_liking)
 #-----------------------------------------
 # SD (Intercept: Participant) |        4.43
 # SD (Residual)               |       14.02
-# plots
-#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-# Model 4: Frequency of consumption
+#==================== 2.4 MODEL 4: FREQUENCY OF CONSUMPTION ====================
 
 fof_null <- lmer(
   Frequency_of_consumption ~ Palatability + Category + (1 | Participant),
   data = food_data_long
 )
 
+#============================= 2.4.1 MODEL SUMMARY =============================
 summary(fof_null)
+#------------------------------------ OUTPUT -----------------------------------
 # REML criterion at convergence: 27028.8
 
 # Scaled residuals: 
@@ -331,15 +340,15 @@ summary(fof_null)
 
 # Correlation of Fixed Effects:
 #  (Intr) PlNHPF CtgryC
-# PltbltyNHPF -0.589              
+# PltbltyNHPF -0.589
 # CategoryCmb -0.600  0.493       
 # CategoryFat -0.506  0.330  0.595
 
-# Visual checks for model 4
+#========================== 2.4.2 VISUAL MODEL CHECKS ==========================
 visuals_assumptions <- data.frame(
   predicted = predict(fof_null),
   residual  = residuals(fof_null),
-  referrer  = food_data_long$Palatability
+  referrer  = model.frame(fof_null)$Palatability
 )
 
 ggplot(visuals_assumptions, aes(x = predicted, y = residual, colour = referrer)) +
@@ -356,9 +365,11 @@ ggplot(visuals_assumptions, aes(sample = residual)) +
 # Global model diagnostics
 check_model(fof_null)
 
-# Extract fixed and random effects for reporting
+#======================== 2.4.3 FIXED AND RANDOM EFFECTS =======================
+# Extract fixed and random effects with 95% confidence intervals.
 model_ci_fof <- model_parameters(fof_null, ci = 0.95)
 print(model_ci_fof)
+#------------------------------------ OUTPUT -----------------------------------
 # Fixed Effects 
 
 # Parameter              | Coefficient |   SE |        95% CI | t(4458) |      p
@@ -375,15 +386,16 @@ print(model_ci_fof)
 # SD (Intercept: Participant) |        1.46
 # SD (Residual)               |        4.93
 
-#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-# Model 5: Perceived healthiness
+#====================== 2.5 MODEL 5: PERCEIVED HEALTHINESS =====================
 
 health_null <- lmer(
   Healthiness ~ Palatability + Category + (1 | Participant),
   data = food_data_long
 )
 
+#============================= 2.5.1 MODEL SUMMARY =============================
 summary(health_null)
+#------------------------------------ OUTPUT -----------------------------------
 # REML criterion at convergence: 40895.2
 # Scaled residuals: 
 #  Min      1Q  Median      3Q     Max 
@@ -397,7 +409,7 @@ summary(health_null)
 #
 # Fixed effects:
 #  Estimate Std. Error        df t value Pr(>|t|)    
-#  (Intercept)           36.3391     1.4050  201.1411  25.863  < 2e-16 ***
+#  (Intercept)           36.3391     1.4050  201.1409  25.863  < 2e-16 ***
 #  PalatabilityNot HPF    6.2193     0.8223 4399.0000   7.563 4.77e-14 ***
 #  CategoryCombo        -12.3966     0.9605 4399.0000 -12.907  < 2e-16 ***
 #  CategoryFat            6.4610     0.9554 4399.0000   6.763 1.53e-11 ***
@@ -406,15 +418,15 @@ summary(health_null)
 
 # Correlation of Fixed Effects:
 #  (Intr) PlNHPF CtgryC
-# PltbltyNHPF -0.559              
-# CategoryCmb -0.570  0.493       
+# PltbltyNHPF -0.559
+# CategoryCmb -0.570  0.493
 # CategoryFat -0.480  0.330  0.595
 
-# Visual checks for model 5
+#========================== 2.5.2 VISUAL MODEL CHECKS ==========================
 visuals_assumptions <- data.frame(
   predicted = predict(health_null),
   residual  = residuals(health_null),
-  referrer  = food_data_long$Palatability
+  referrer  = model.frame(health_null)$Palatability
 )
 
 ggplot(visuals_assumptions, aes(x = predicted, y = residual, colour = referrer)) +
@@ -431,11 +443,13 @@ ggplot(visuals_assumptions, aes(sample = residual)) +
 # Global model diagnostics
 check_model(health_null)
 
-# Extract fixed and random effects with CIs
+#======================== 2.5.3 FIXED AND RANDOM EFFECTS =======================
+# Extract fixed and random effects with 95% confidence intervals.
 model_ci_health <- model_parameters(health_null, ci = 0.95)
 print(model_ci_health)
+#------------------------------------ OUTPUT -----------------------------------
 
-# Fixed Effects 
+# Fixed Effects
 
 #Parameter              | Coefficient |   SE |           95% CI | t(4458) |      p
 #---------------------------------------------------------------------------------
@@ -451,5 +465,5 @@ print(model_ci_health)
 # SD (Intercept: Participant) |        7.72
 # SD (Residual)               |       23.28
 
-#:::::::::::::::::::::::::::THE END:::::::::::::::::::::::::::::::::::::::::::::
+#::::::::::::::::::::::::::::::::::: THE END :::::::::::::::::::::::::::::::::::
 
