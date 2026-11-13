@@ -19,7 +19,7 @@
 
 # Load libraries used in this script
 library(tidyverse)    # data wrangling (dplyr) and plotting (ggplot2)
-library(ggpubr)       # ggscatter(): scatter plots with regression line and correlation label
+library(ggpubr)       # scatter plots with regression line and correlation label
 library(knitr)        # reporting
 library(dplyr)        # data manipulation
 library(Matrix)       # required by lme4
