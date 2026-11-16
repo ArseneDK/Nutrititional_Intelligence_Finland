@@ -1,13 +1,13 @@
 # ==============================================================================================================================================
 # 
 # Nutritional intelligence in FinnFoodPics
-# created by Arsene Kanyamibwa (arsene.kanyamibwa@helsinki.fi) and reviewed by Manon Chédeville (manon.chedeville@helsinki.fi)
+# Created by Arsene Kanyamibwa (arsene.kanyamibwa@helsinki.fi) and reviewed by Manon Chédeville (manon.chedeville@helsinki.fi)
 # Purpose: Test effects of palatability and category on ratings, accounting for repeated measures per participant.
 # Script: Mixed-effects models for food ratings (EED, satiety, liking, etc.)
 #
 # Created: 18.06.2025
-# updated: 13.11.2026
-# Updated: 16.11.2026, comments add, light refactoring for clearity, Sherwin Nedaei Janbesaraei (sherwin.nedaeijanbesaraei@helsinki.fi).
+# Updated: 13.11.2026
+# Updated: 16.11.2026, comments added, light refactoring for clarity, Sherwin Nedaei Janbesaraei (sherwin.nedaeijanbesaraei@helsinki.fi).
 
 # ============================================================================================================================================== 
 
