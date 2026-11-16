@@ -7,7 +7,7 @@
 #
 # Created: 18.06.2025
 # updated: 13.11.2026
-# Updated: 16.11.2026, comments add, light refactoring for clearity, Sherwin NJ.
+# Updated: 16.11.2026, comments add, light refactoring for clearity, Sherwin Nedaei Janbesaraei (sherwin.nedaeijanbesaraei@helsinki.fi).
 
 # ============================================================================================================================================== 
 
