@@ -31,13 +31,13 @@ Data files:
 1. Install R 4.1 or newer.
 2. Open the repository as the working project, or start R from the repository
    root.
-3. Run any script, for example:
+3. Run any script on Mac or LINUX, for example:
 
    ```r
    source("01_Ttests_and_correlations.R")
    ```
 
-You can also open a script in RStudio or VS Code and run it block by block.
+**Microsoft Windows** users can open a script in RStudio or VS Code and run it block by block.
 The numbered sections and `{}` blocks support selective execution and make it
 possible to inspect each analysis stage separately.
 
